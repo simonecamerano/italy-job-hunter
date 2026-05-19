@@ -2,8 +2,8 @@ name: Daily Job Hunt
 
 on:
   schedule:
-    # Every day at 08:00 UTC (10:00 Italian summer time)
-    - cron: '0 8 * * *'
+    # Every day at 06:00 UTC (08:00 Italian summer time)
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 jobs:
