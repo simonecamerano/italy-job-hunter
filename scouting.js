@@ -44,16 +44,16 @@ async function runScouting() {
   for (const card of pitchCards) {
     // Chunk messages to stay safely below Telegram's 4096-character hard limit
     if ((buffer + card).length > TELEGRAM_MAX_CHARS) {
-      await inviaATelegram(buffer);
-      sentCount++;
+      const sent = await inviaATelegram(buffer);
+      if (sent) sentCount++;
       buffer = `📦 <b>SPONTANEOUS DOSSIER (Continued...)</b>\n\n`;
     }
     buffer += card + `\n\n` + `═`.repeat(15) + `\n\n`;
   }
 
   if (buffer.trim() !== '') {
-    await inviaATelegram(buffer);
-    sentCount++;
+    const sent = await inviaATelegram(buffer);
+    if (sent) sentCount++;
   }
 
   console.log(`✅ Dossier sent to Telegram! Total messages: ${sentCount}`);

@@ -60,7 +60,7 @@ Structure the response EXACTLY like this:
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    return data.choices?.[0]?.message?.content ?? 'Unable to generate DeepSeek analysis for this listing.';
 
   } catch (error) {
     console.error('❌ Error during DeepSeek analysis:', error);
