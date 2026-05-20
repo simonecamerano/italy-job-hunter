@@ -1,0 +1,7 @@
+node_modules/
+data/seen_urls.json
+.env
+.git/
+docs/
+tests/
+*.test.js

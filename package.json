@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "scout": "node scouting.js",
+    "bot": "node bot.js",
     "test": "vitest run"
   },
   "keywords": [

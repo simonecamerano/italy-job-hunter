@@ -1,0 +1,8 @@
+services:
+  bot:
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      # Mount local data/ so cv.md is available and seen_urls.json persists
+      - ./data:/app/data
