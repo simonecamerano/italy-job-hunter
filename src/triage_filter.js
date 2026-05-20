@@ -72,3 +72,58 @@ If the listing is NOT valid respond: NO`;
     return false;
   }
 }
+
+/**
+ * Checks whether a scouted company is based in Italy.
+ * Rejects foreign companies before spending a DeepSeek call on them.
+ *
+ * @param {{ name: string, url: string, content: string }} azienda
+ * @returns {Promise<boolean>} true if the company appears to be Italian, false otherwise
+ */
+export async function eseguiTriageAzienda(azienda) {
+  const apiKey = process.env.GROQ_API_KEY;
+
+  if (!apiKey) {
+    console.error('❌ Error: GROQ_API_KEY not configured in .env');
+    return false;
+  }
+
+  const systemPrompt = `You are a boolean filter. Respond only "SI" or "NO". No explanations.
+
+Respond "SI" if the company is based in Italy or operates primarily in the Italian market.
+Respond "NO" if the company is foreign (USA, UK, India, etc.) with no clear Italian presence.`;
+
+  const userContent = `Company: ${azienda.name}\nURL: ${azienda.url}\nDescription: ${azienda.content}`;
+
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: TRIAGE_MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userContent },
+        ],
+        temperature: 0.0,
+        max_tokens: 5,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Groq API Error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    const clean = data.choices[0].message.content.trim().toUpperCase();
+    return clean.includes('SI');
+
+  } catch (error) {
+    console.error('❌ Error during company triage:', error.message);
+    return false;
+  }
+}

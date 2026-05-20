@@ -1,4 +1,5 @@
 import { scoutAziendeRetailTech } from './src/company_scouter.js';
+import { eseguiTriageAzienda } from './src/triage_filter.js';
 import { analizzaPerCandidaturaSpontanea } from './src/spontaneous_analyzer.js';
 import { inviaATelegram } from './src/telegram_sender.js';
 import { API_DELAY_MS, TELEGRAM_MAX_CHARS } from './src/config.js';
@@ -22,6 +23,13 @@ async function runScouting() {
   const pitchCards = [];
 
   for (const company of companies) {
+    const isItalian = await eseguiTriageAzienda(company);
+    if (!isItalian) {
+      console.log(`❌ [REJECTED] "${company.name}" — not an Italian company.`);
+      await wait(API_DELAY_MS);
+      continue;
+    }
+
     console.log(`\n🏢 Analyzing positioning for: "${company.name}"...`);
     const report = await analizzaPerCandidaturaSpontanea(company);
 
