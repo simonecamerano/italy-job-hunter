@@ -3,7 +3,13 @@ import { eseguiTriage } from './src/triage_filter.js';
 import { analizzaConDeepSeek } from './src/deepseek_analyzer.js';
 import { inviaATelegram } from './src/telegram_sender.js';
 import { loadSeen, saveSeen } from './src/seen_store.js';
-import { API_DELAY_MS, TELEGRAM_MAX_CHARS } from './src/config.js';
+import { API_DELAY_MS, TELEGRAM_MAX_CHARS, MIN_MATCH_SCORE } from './src/config.js';
+
+/** Extracts the numeric match score from a DeepSeek report string. Returns null if not found. */
+function parseMatchScore(report) {
+  const match = report.match(/MATCH SCORE[^:]*:\s*(\d+)%/i);
+  return match ? parseInt(match[1], 10) : null;
+}
 
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -44,9 +50,14 @@ async function runHunter() {
       console.log(`🔥 [APPROVED] Match found: "${listing.title}"`);
       console.log('🤖 [STAGE 3] Generating analysis with DeepSeek-V3...');
       const report = await analizzaConDeepSeek(listing);
+      const score = parseMatchScore(report);
 
-      const card = `💼 <b>${listing.title.toUpperCase()}</b>\n\n${report}\n\n🔗 <a href="${listing.url}">View original listing</a>`;
-      approvedCards.push(card);
+      if (score !== null && score < MIN_MATCH_SCORE) {
+        console.log(`📉 [FILTERED] "${listing.title}" — score ${score}% below threshold (${MIN_MATCH_SCORE}%).`);
+      } else {
+        const card = `💼 <b>${listing.title.toUpperCase()}</b>\n\n${report}\n\n🔗 <a href="${listing.url}">View original listing</a>`;
+        approvedCards.push(card);
+      }
     } else {
       console.log(`❌ [REJECTED] "${listing.title}" does not match.`);
     }

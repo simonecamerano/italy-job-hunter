@@ -29,3 +29,9 @@ export const API_DELAY_MS = 2500;
  * Telegram's hard limit is 4096; this value gives a safety buffer.
  */
 export const TELEGRAM_MAX_CHARS = 4000;
+
+/**
+ * Minimum match score (0–100) required to include a listing in the Telegram report.
+ * Listings analysed by DeepSeek but scoring below this threshold are silently dropped.
+ */
+export const MIN_MATCH_SCORE = 65;

@@ -8,6 +8,7 @@ import {
   ANALYSIS_MODEL,
   API_DELAY_MS,
   TELEGRAM_MAX_CHARS,
+  MIN_MATCH_SCORE,
 } from '../src/config.js';
 
 describe('config', () => {
@@ -49,5 +50,11 @@ describe('config', () => {
   it('exports TELEGRAM_MAX_CHARS as a positive number', () => {
     expect(typeof TELEGRAM_MAX_CHARS).toBe('number');
     expect(TELEGRAM_MAX_CHARS).toBeGreaterThan(0);
+  });
+
+  it('exports MIN_MATCH_SCORE as a number between 0 and 100', () => {
+    expect(typeof MIN_MATCH_SCORE).toBe('number');
+    expect(MIN_MATCH_SCORE).toBeGreaterThanOrEqual(0);
+    expect(MIN_MATCH_SCORE).toBeLessThanOrEqual(100);
   });
 });
