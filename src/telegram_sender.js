@@ -2,8 +2,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 /**
- * Converts the main Markdown constructs to HTML for safe rendering in Telegram.
- * Exported for unit testing.
+ * Converts Markdown to Telegram-compatible HTML.
+ * Use this on plain-text/Markdown content before embedding it in an HTML message.
  *
  * @param {string} text
  * @returns {string}
@@ -25,11 +25,11 @@ export function convertiMarkdownInHtml(text) {
 }
 
 /**
- * Sends a formatted HTML message to the configured Telegram chat.
- * Converts Markdown to HTML before sending; HTML parse mode is more robust
- * than Markdown for AI-generated text.
+ * Sends an HTML-formatted message to the configured Telegram chat.
+ * The caller is responsible for providing valid Telegram HTML
+ * (supported tags: <b>, <i>, <u>, <s>, <code>, <pre>, <a href="...">).
  *
- * @param {string} testo - Message text (Markdown is converted to HTML automatically)
+ * @param {string} testo - Message text already formatted as Telegram HTML
  * @returns {Promise<boolean>} true if the message was delivered successfully
  */
 export async function inviaATelegram(testo) {
@@ -42,7 +42,6 @@ export async function inviaATelegram(testo) {
   }
 
   const url = `https://api.telegram.org/bot${token}/sendMessage`;
-  const testoInHtml = convertiMarkdownInHtml(testo);
 
   try {
     const response = await fetch(url, {
@@ -50,7 +49,7 @@ export async function inviaATelegram(testo) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: chatId,
-        text: testoInHtml,
+        text: testo,
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),

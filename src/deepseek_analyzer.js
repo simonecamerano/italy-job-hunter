@@ -27,13 +27,14 @@ export async function analizzaConDeepSeek(annuncio) {
 Analyze a job listing and cross-reference it with the user's CV to assess real compatibility,
 highlighting strategic strengths (soft skills, business/management background) and technical gaps.
 
-Generate a report in ITALIAN, optimized for Telegram (bold for titles, scannable text, no walls of text).
+Generate a report in ITALIAN, optimized for Telegram. Use HTML tags for formatting (not Markdown).
+Keep it scannable — no walls of text.
 
 Structure the response EXACTLY like this:
-🎯 **MATCH SCORE TECNICO**: [Percentage based on required Node/Vue/Nuxt stack]
-📈 **IL SUPERPOTERE (SINERGIA DI BACKGROUND)**: [How the user's 20+ years of operational/commercial experience adds value in this role]
-⚠️ **ANALISI DEL GAP**: [What is missing or should be studied/mentioned in the interview]
-📝 **GANCIO PER MESSAGGIO / COPERTINA**: [3-4 line text ready to use for a recruiter or LinkedIn message]`;
+🎯 <b>MATCH SCORE TECNICO</b>: [Percentage based on required Node/Vue/Nuxt stack]
+📈 <b>IL SUPERPOTERE (SINERGIA DI BACKGROUND)</b>: [How the user's 20+ years of operational/commercial experience adds value in this role]
+⚠️ <b>ANALISI DEL GAP</b>: [What is missing or should be studied/mentioned in the interview]
+📝 <b>GANCIO PER MESSAGGIO / COPERTINA</b>: [3-4 line text ready to use for a recruiter or LinkedIn message]`;
 
     const userContent = `### MY CV:\n${cvContent}\n\n### JOB LISTING:\nTitle: ${annuncio.title}\nLink: ${annuncio.url}\nText: ${annuncio.content}`;
 
