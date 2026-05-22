@@ -14,13 +14,11 @@ const mockAzienda = {
 
 describe('analizzaPerCandidaturaSpontanea', () => {
   beforeEach(() => {
-    process.env.DEEPSEEK_API_KEY = 'test-key';
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(fs.readFileSync).mockReturnValue('# My CV');
   });
 
   afterEach(() => {
-    delete process.env.DEEPSEEK_API_KEY;
     vi.restoreAllMocks();
   });
 
@@ -33,11 +31,17 @@ describe('analizzaPerCandidaturaSpontanea', () => {
     expect(result).toBe('Pitch content here');
   });
 
-  it('returns error string when API key is missing', async () => {
-    delete process.env.DEEPSEEK_API_KEY;
-    const result = await analizzaPerCandidaturaSpontanea(mockAzienda);
-    expect(typeof result).toBe('string');
-    expect(result.length).toBeGreaterThan(0);
+  it('calls the Ollama local endpoint', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: 'ok' } }] }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+    await analizzaPerCandidaturaSpontanea(mockAzienda);
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:11434/v1/chat/completions',
+      expect.objectContaining({ method: 'POST' })
+    );
   });
 
   it('returns error string when choices is missing from response without throwing', async () => {
