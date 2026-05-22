@@ -14,29 +14,34 @@ const mockAnnuncio = {
 
 describe('analizzaConDeepSeek', () => {
   beforeEach(() => {
-    process.env.DEEPSEEK_API_KEY = 'test-key';
     vi.mocked(fs.readFileSync).mockReturnValue('# My CV\n## Skills\nNode.js, Vue.js');
   });
 
   afterEach(() => {
-    delete process.env.DEEPSEEK_API_KEY;
     vi.restoreAllMocks();
   });
 
   it('returns the report string on success', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ choices: [{ message: { content: 'Match score: 85%' } }] }),
-    }));
+    });
+    vi.stubGlobal('fetch', mockFetch);
     const result = await analizzaConDeepSeek(mockAnnuncio);
     expect(result).toBe('Match score: 85%');
   });
 
-  it('returns an error string when DEEPSEEK_API_KEY is missing', async () => {
-    delete process.env.DEEPSEEK_API_KEY;
-    const result = await analizzaConDeepSeek(mockAnnuncio);
-    expect(typeof result).toBe('string');
-    expect(result.length).toBeGreaterThan(0);
+  it('calls the Ollama local endpoint', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: 'ok' } }] }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+    await analizzaConDeepSeek(mockAnnuncio);
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:11434/v1/chat/completions',
+      expect.objectContaining({ method: 'POST' })
+    );
   });
 
   it('returns an error string when the CV file cannot be read', async () => {
