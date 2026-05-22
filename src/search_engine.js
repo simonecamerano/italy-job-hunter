@@ -1,7 +1,5 @@
 import { tavily } from '@tavily/core';
-import dotenv from 'dotenv';
-import { SEARCH_QUERY, SEARCH_MAX_RESULTS } from './config.js';
-dotenv.config();
+import { getSearchQuery, SEARCH_MAX_RESULTS } from './config.js';
 
 /**
  * Searches the web for Full Stack (Vue.js / Nuxt / Node.js) job listings in Italy.
@@ -9,7 +7,7 @@ dotenv.config();
  *
  * @returns {Promise<Array<{title: string, url: string, content: string}>>}
  */
-export async function cercaLavoriItalia() {
+export async function searchJobListings() {
   const apiKey = process.env.TAVILY_API_KEY?.trim();
 
   if (!apiKey) {
@@ -17,10 +15,10 @@ export async function cercaLavoriItalia() {
     return [];
   }
 
-  const tvly = tavily({ apiKey });
+  const tavilyClient = tavily({ apiKey });
 
   try {
-    const response = await tvly.search(SEARCH_QUERY, {
+    const response = await tavilyClient.search(getSearchQuery(), {
       // Advanced depth analyzes full page text rather than just metadata
       searchDepth: 'advanced',
       maxResults: SEARCH_MAX_RESULTS,
@@ -30,12 +28,11 @@ export async function cercaLavoriItalia() {
       return [];
     }
 
-    return response.results.map(result => ({
+    return response.results.map((result) => ({
       title: result.title || 'Title not available',
       url: result.url || '#',
       content: result.content || '',
     }));
-
   } catch (error) {
     console.error('❌ Error during Tavily search:', error.message);
     return [];

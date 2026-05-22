@@ -1,3 +1,11 @@
 .env
 node_modules/
 data/seen_urls.json
+
+data/
+docs/
+
+CLAUDE.md
+agentdb.rvf
+agentdb.rvf.lock
+ruvector.db
