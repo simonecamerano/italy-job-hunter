@@ -1,0 +1,4 @@
+# Daily job hunt at 06:00 UTC (08:00 Italian summer time)
+0 6 * * * cd /app && node index.js >> /proc/1/fd/1 2>&1
+# Weekly company scout every Monday at 08:00 UTC (10:00 Italian summer time)
+0 8 * * 1 cd /app && node scouting.js >> /proc/1/fd/1 2>&1

@@ -7,6 +7,7 @@ RUN npm ci --omit=dev
 
 COPY . .
 
-RUN mkdir -p data
+RUN mkdir -p data && \
+    cp crontab /etc/crontabs/root
 
 CMD ["node", "bot.js"]

@@ -1,10 +1,11 @@
 import { spawn } from 'child_process';
 import dotenv from 'dotenv';
 dotenv.config();
+import { ensureSetup } from './src/setup/wizard.js';
 
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim();
 const CHAT_ID = String(process.env.TELEGRAM_CHAT_ID?.trim());
-const API = `https://api.telegram.org/bot${TOKEN}`;
+const API_BASE = `https://api.telegram.org/bot${TOKEN}`;
 
 if (!TOKEN || !CHAT_ID) {
   console.error('❌ TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are required.');
@@ -12,11 +13,11 @@ if (!TOKEN || !CHAT_ID) {
 }
 
 let offset = 0;
-let running = false;
+let pipelineRunning = false;
 
 async function sendMessage(text) {
   try {
-    await fetch(`${API}/sendMessage`, {
+    await fetch(`${API_BASE}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: 'HTML' }),
@@ -26,19 +27,19 @@ async function sendMessage(text) {
   }
 }
 
-function runScript(script, label) {
-  if (running) {
+function runPipeline(scriptPath, label) {
+  if (pipelineRunning) {
     sendMessage('⚠️ Una pipeline è già in esecuzione. Attendi che finisca.');
     return;
   }
 
-  running = true;
+  pipelineRunning = true;
   sendMessage(`🚀 <b>${label}</b> avviato...`);
 
-  const child = spawn('node', [script], { stdio: 'inherit' });
+  const child = spawn('node', [scriptPath], { stdio: 'inherit' });
 
   child.on('close', (code) => {
-    running = false;
+    pipelineRunning = false;
     if (code === 0) {
       sendMessage(`✅ <b>${label}</b> completato.`);
     } else {
@@ -47,9 +48,12 @@ function runScript(script, label) {
   });
 }
 
+// Long-polling loop with exponential backoff on error (max 30s between retries)
+let backoffMs = 1000;
+
 async function poll() {
   try {
-    const res = await fetch(`${API}/getUpdates?offset=${offset}&timeout=30`);
+    const res = await fetch(`${API_BASE}/getUpdates?offset=${offset}&timeout=30`);
     const data = await res.json();
 
     for (const update of data.result ?? []) {
@@ -61,18 +65,31 @@ async function poll() {
       // Ignore messages from anyone other than the configured chat
       if (fromId !== CHAT_ID) continue;
 
-      if (text === '/hunt') runScript('index.js', 'Job Hunt');
-      else if (text === '/scout') runScript('scouting.js', 'Company Scout');
-      else if (text === '/status') sendMessage(running ? '⏳ Pipeline in esecuzione...' : '💤 Bot in attesa.');
-      else if (text?.startsWith('/')) sendMessage('Comandi disponibili:\n/hunt — avvia la ricerca lavoro\n/scout — avvia lo scouting aziende\n/status — controlla se una pipeline è in corso');
+      if (text === '/hunt') {
+        runPipeline('index.js', 'Job Hunt');
+      } else if (text === '/scout') {
+        runPipeline('scouting.js', 'Company Scout');
+      } else if (text === '/status') {
+        sendMessage(pipelineRunning ? '⏳ Pipeline in esecuzione...' : '💤 Bot in attesa.');
+      } else if (text?.startsWith('/')) {
+        sendMessage(
+          'Comandi disponibili:\n/hunt — avvia la ricerca lavoro\n/scout — avvia lo scouting aziende\n/status — controlla se una pipeline è in corso',
+        );
+      }
     }
+
+    backoffMs = 1000; // reset on success
   } catch (err) {
     console.error('❌ Poll error:', err.message);
+    // Exponential backoff: wait progressively longer on repeated failures, cap at 30s
+    await new Promise((resolve) => setTimeout(resolve, backoffMs));
+    backoffMs = Math.min(backoffMs * 2, 30_000);
   }
 
-  // Long-polling: immediately restart the cycle
-  poll();
+  // Reschedule via setImmediate so the call stack never grows unboundedly
+  setImmediate(poll);
 }
 
+await ensureSetup();
 console.log('🤖 Bot is running. Listening for /hunt, /scout, /status...');
 poll();

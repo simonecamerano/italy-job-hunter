@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { analizzaConDeepSeek } from '../src/deepseek_analyzer.js';
+import { analyzeJobListing } from '../src/job_analyzer.js';
 
 vi.mock('dotenv', () => ({ default: { config: vi.fn() } }));
 vi.mock('fs');
 
 import fs from 'fs';
 
-const mockAnnuncio = {
+const mockListing = {
   title: 'Full Stack Developer',
   url: 'https://example.com/job/123',
   content: 'Node.js backend, Vue.js frontend, Italian market.',
 };
 
-describe('analizzaConDeepSeek', () => {
+describe('analyzeJobListing', () => {
   beforeEach(() => {
     vi.mocked(fs.readFileSync).mockReturnValue('# My CV\n## Skills\nNode.js, Vue.js');
   });
@@ -24,10 +24,12 @@ describe('analizzaConDeepSeek', () => {
   it('returns the report string on success', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ choices: [{ message: { content: 'Match score: 85%' } }] }),
+      json: async () => ({
+        choices: [{ message: { content: 'Match score: 85%' } }],
+      }),
     });
     vi.stubGlobal('fetch', mockFetch);
-    const result = await analizzaConDeepSeek(mockAnnuncio);
+    const result = await analyzeJobListing(mockListing);
     expect(result).toBe('Match score: 85%');
   });
 
@@ -37,10 +39,10 @@ describe('analizzaConDeepSeek', () => {
       json: async () => ({ choices: [{ message: { content: 'ok' } }] }),
     });
     vi.stubGlobal('fetch', mockFetch);
-    await analizzaConDeepSeek(mockAnnuncio);
+    await analyzeJobListing(mockListing);
     expect(mockFetch).toHaveBeenCalledWith(
       'http://localhost:11434/v1/chat/completions',
-      expect.objectContaining({ method: 'POST' })
+      expect.objectContaining({ method: 'POST' }),
     );
   });
 
@@ -48,17 +50,20 @@ describe('analizzaConDeepSeek', () => {
     vi.mocked(fs.readFileSync).mockImplementation(() => {
       throw new Error('ENOENT: no such file or directory');
     });
-    const result = await analizzaConDeepSeek(mockAnnuncio);
+    const result = await analyzeJobListing(mockListing);
     expect(typeof result).toBe('string');
     expect(result.length).toBeGreaterThan(0);
   });
 
   it('returns an error string on HTTP error without throwing', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false,
-      status: 429,
-    }));
-    const result = await analizzaConDeepSeek(mockAnnuncio);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+      }),
+    );
+    const result = await analyzeJobListing(mockListing);
     expect(typeof result).toBe('string');
     expect(result.length).toBeGreaterThan(0);
   });

@@ -7,7 +7,11 @@
     "start": "node index.js",
     "scout": "node scouting.js",
     "bot": "node bot.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "prettier --check .",
+    "format": "prettier --write .",
+    "eslint": "eslint . --ext .js",
+    "eslint:fix": "eslint . --ext .js --fix"
   },
   "keywords": [
     "job-hunting",
@@ -20,10 +24,15 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@clack/prompts": "^1.4.0",
     "@tavily/core": "^0.7.3",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "prettier": "^3.8.3"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.0",
+    "globals": "^17.6.0",
     "vitest": "^2.1.9"
   }
 }

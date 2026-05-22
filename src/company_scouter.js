@@ -1,7 +1,5 @@
 import { tavily } from '@tavily/core';
-import dotenv from 'dotenv';
-import { SCOUT_QUERY, SCOUT_MAX_RESULTS } from './config.js';
-dotenv.config();
+import { getScoutQuery, SCOUT_MAX_RESULTS } from './config.js';
 
 /**
  * Searches for tech companies and software houses in the Italian Retail/Logistics sector.
@@ -9,24 +7,24 @@ dotenv.config();
  *
  * @returns {Promise<Array<{name: string, url: string, content: string}>>}
  */
-export async function scoutAziendeRetailTech() {
+export async function scoutRetailTechCompanies() {
   const apiKey = process.env.TAVILY_API_KEY?.trim();
   if (!apiKey) {
     console.error('❌ Error: TAVILY_API_KEY missing from .env');
     return [];
   }
 
-  const tvly = tavily({ apiKey });
+  const tavilyClient = tavily({ apiKey });
 
   try {
-    const response = await tvly.search(SCOUT_QUERY, {
+    const response = await tavilyClient.search(getScoutQuery(), {
       searchDepth: 'advanced',
       maxResults: SCOUT_MAX_RESULTS,
     });
 
     if (!response || !response.results) return [];
 
-    return response.results.map(result => ({
+    return response.results.map((result) => ({
       name: result.title || 'Target Company',
       url: result.url || '#',
       content: result.content || '',

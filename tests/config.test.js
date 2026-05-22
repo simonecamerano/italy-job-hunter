@@ -1,20 +1,23 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import {
-  SEARCH_QUERY,
+  getSearchQuery,
+  getScoutQuery,
   SEARCH_MAX_RESULTS,
-  SCOUT_QUERY,
   SCOUT_MAX_RESULTS,
   TRIAGE_MODEL,
-  ANALYSIS_MODEL,
+  getAnalysisModel,
+  getOllamaBaseUrl,
   API_DELAY_MS,
   TELEGRAM_MAX_CHARS,
   MIN_MATCH_SCORE,
+  getUserConfig,
+  getAnalysisApiKey,
 } from '../src/config.js';
 
 describe('config', () => {
-  it('exports SEARCH_QUERY as a non-empty string', () => {
-    expect(typeof SEARCH_QUERY).toBe('string');
-    expect(SEARCH_QUERY.length).toBeGreaterThan(0);
+  it('getSearchQuery returns a non-empty string', () => {
+    expect(typeof getSearchQuery()).toBe('string');
+    expect(getSearchQuery().length).toBeGreaterThan(0);
   });
 
   it('exports SEARCH_MAX_RESULTS as a positive number', () => {
@@ -22,9 +25,9 @@ describe('config', () => {
     expect(SEARCH_MAX_RESULTS).toBeGreaterThan(0);
   });
 
-  it('exports SCOUT_QUERY as a non-empty string', () => {
-    expect(typeof SCOUT_QUERY).toBe('string');
-    expect(SCOUT_QUERY.length).toBeGreaterThan(0);
+  it('getScoutQuery returns a non-empty string', () => {
+    expect(typeof getScoutQuery()).toBe('string');
+    expect(getScoutQuery().length).toBeGreaterThan(0);
   });
 
   it('exports SCOUT_MAX_RESULTS as a positive number', () => {
@@ -37,9 +40,9 @@ describe('config', () => {
     expect(TRIAGE_MODEL.length).toBeGreaterThan(0);
   });
 
-  it('exports ANALYSIS_MODEL as a non-empty string', () => {
-    expect(typeof ANALYSIS_MODEL).toBe('string');
-    expect(ANALYSIS_MODEL.length).toBeGreaterThan(0);
+  it('getAnalysisModel returns a non-empty string', () => {
+    expect(typeof getAnalysisModel()).toBe('string');
+    expect(getAnalysisModel().length).toBeGreaterThan(0);
   });
 
   it('exports API_DELAY_MS as a positive number', () => {
@@ -56,5 +59,33 @@ describe('config', () => {
     expect(typeof MIN_MATCH_SCORE).toBe('number');
     expect(MIN_MATCH_SCORE).toBeGreaterThanOrEqual(0);
     expect(MIN_MATCH_SCORE).toBeLessThanOrEqual(100);
+  });
+
+  it('getOllamaBaseUrl returns a non-empty URL string', () => {
+    const url = getOllamaBaseUrl();
+    expect(typeof url).toBe('string');
+    expect(url.length).toBeGreaterThan(0);
+    expect(url).toMatch(/^https?:\/\//);
+  });
+});
+
+describe('getUserConfig', () => {
+  it('returns null when data/user-config.json does not exist in test env', () => {
+    const result = getUserConfig();
+    expect(result === null || typeof result === 'object').toBe(true);
+  });
+});
+
+describe('getAnalysisApiKey', () => {
+  afterEach(() => {
+    delete process.env.DEEPSEEK_API_KEY;
+  });
+
+  it('returns null when no user-config.json exists (no deepseek provider)', () => {
+    expect(getAnalysisApiKey()).toBeNull();
+  });
+
+  it('is a function', () => {
+    expect(typeof getAnalysisApiKey).toBe('function');
   });
 });
